@@ -1,0 +1,1129 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Consulta - Cruzamento de Leads e Pesquisa</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f0f3f6;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        .card {
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+            background-color: #ffffff;
+        }
+        .card-header {
+            border-bottom: 2px solid #3498db;
+            color: #2c3e50;
+            font-weight: bold;
+            padding: 15px 20px;
+        }
+        .btn-primary {
+            background-color: #3498db;
+            border: none;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .btn-success {
+            background-color: #2ecc71;
+            border: none;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .btn-danger {
+            background-color: #e74c3c;
+            border: none;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .upload-area {
+            border: 1px dashed #ddd;
+            border-radius: 5px;
+            padding: 20px;
+            text-align: center;
+            background-color: #f8f9fa;
+            margin: 10px 0;
+            cursor: pointer;
+        }
+        .table-header-green {
+            background-color: #2ecc71;
+            color: white;
+        }
+        .table-header-blue {
+            background-color: #3498db;
+            color: white;
+        }
+        .nav-tabs .nav-link.active {
+            border-top: 3px solid #3498db;
+        }
+        .high-score {
+            background-color: #d5f5e3;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-center mb-4">Sistema de Consulta - Cruzamento de Leads e Pesquisa</h1>
+        
+        <!-- Seção 1: Upload e Cruzamento -->
+        <div class="card">
+            <div class="card-header">
+                <h3>Upload e Cruzamento de Dados</h3>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">Arquivo de Leads (CSV ou Excel):</label>
+                        <div class="upload-area" id="upload-leads">
+                            Arraste e solte ou <a href="#" class="text-primary fw-bold">selecione um arquivo</a>
+                            <input type="file" id="leads-file" class="d-none">
+                        </div>
+                        <div id="leads-status"></div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">Arquivo de Pesquisa (CSV ou Excel):</label>
+                        <div class="upload-area" id="upload-pesquisa">
+                            Arraste e solte ou <a href="#" class="text-primary fw-bold">selecione um arquivo</a>
+                            <input type="file" id="pesquisa-file" class="d-none">
+                        </div>
+                        <div id="pesquisa-status"></div>
+                    </div>
+                </div>
+                <div class="mt-3 text-center">
+                    <button id="cruzar-btn" class="btn btn-primary btn-lg px-4">Cruzar Dados</button>
+                </div>
+                <div id="cruzamento-status" class="mt-3 text-center"></div>
+            </div>
+        </div>
+        
+        <!-- Seção 2: Filtros -->
+        <div class="card">
+            <div class="card-header">
+                <h3>Filtros de Consulta</h3>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">UTM Term:</label>
+                            <select id="utm-term-select" class="form-select" multiple>
+                                <option value="" disabled>Carregando opções...</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Faixa de Renda:</label>
+                            <select id="renda-select" class="form-select" multiple>
+                                <option value="" disabled>Carregando opções...</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">UTM Source:</label>
+                            <select id="utm-source-select" class="form-select" multiple>
+                                <option value="" disabled>Carregando opções...</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">UTM Medium:</label>
+                            <select id="utm-medium-select" class="form-select" multiple>
+                                <option value="" disabled>Carregando opções...</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">UTM Campaign:</label>
+                    <select id="utm-campaign-select" class="form-select" multiple>
+                        <option value="" disabled>Carregando opções...</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Busca por Email:</label>
+                    <input type="text" id="email-search" class="form-control" placeholder="Digite um email para buscar...">
+                </div>
+                <div class="d-flex justify-content-center mt-3">
+                    <button id="apply-filters" class="btn btn-success btn-lg me-3">Aplicar Filtros</button>
+                    <button id="clear-filters" class="btn btn-danger btn-lg">Limpar Filtros</button>
+                </div>
+                <div class="mt-4 text-center">
+                    <label class="form-label fw-bold d-block">Download dos Resultados:</label>
+                    <button id="download-btn" class="btn btn-primary btn-lg px-4 mt-2">Download CSV</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Seção 3: Visualizações -->
+        <div class="card">
+            <div class="card-header">
+                <h3>Visualizações</h3>
+            </div>
+            <div class="card-body">
+                <ul class="nav nav-tabs" id="visualizacoes-tab" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="heatmap-tab" data-bs-toggle="tab" data-bs-target="#heatmap-content" type="button" role="tab" aria-controls="heatmap-content" aria-selected="true">Distribuição de Renda por UTM Term</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="bar-tab" data-bs-toggle="tab" data-bs-target="#bar-content" type="button" role="tab" aria-controls="bar-content" aria-selected="false">Comparação de UTM Terms</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="pie-tab" data-bs-toggle="tab" data-bs-target="#pie-content" type="button" role="tab" aria-controls="pie-content" aria-selected="false">Distribuição de Renda</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="table-tab" data-bs-toggle="tab" data-bs-target="#table-content" type="button" role="tab" aria-controls="table-content" aria-selected="false">Dados Detalhados</button>
+                    </li>
+                </ul>
+                <div class="tab-content p-3" id="visualizacoes-content">
+                    <div class="tab-pane fade show active" id="heatmap-content" role="tabpanel" aria-labelledby="heatmap-tab">
+                        <div id="heatmap-container" style="height: 600px;">
+                            <div class="text-center py-5">
+                                <h4 class="text-muted">Carregue os dados para visualizar o heatmap</h4>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="tab-pane fade" id="bar-content" role="tabpanel" aria-labelledby="bar-tab">
+                        <div id="bar-container" style="height: 600px;">
+                            <div class="text-center py-5">
+                                <h4 class="text-muted">Carregue os dados para visualizar o gráfico de barras</h4>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="tab-pane fade" id="pie-content" role="tabpanel" aria-labelledby="pie-tab">
+                        <div id="pie-container" style="height: 600px;">
+                            <div class="text-center py-5">
+                                <h4 class="text-muted">Carregue os dados para visualizar o gráfico de pizza</h4>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="tab-pane fade" id="table-content" role="tabpanel" aria-labelledby="table-tab">
+                        <h4 class="text-center mt-3 mb-2">Resultados da Consulta</h4>
+                        <div id="results-count" class="text-center mb-3 fw-bold"></div>
+                        <div class="table-responsive">
+                            <table id="results-table" class="table table-striped">
+                                <thead class="table-header-blue">
+                                    <tr>
+                                        <th>UTM Term</th>
+                                        <th>Email</th>
+                                        <th>Faixa de Renda</th>
+                                        <th>UTM Source</th>
+                                        <th>UTM Medium</th>
+                                        <th>UTM Campaign</th>
+                                        <th>Gênero</th>
+                                        <th>Idade</th>
+                                        <th>Estado</th>
+                                        <th>Atividade</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td colspan="10" class="text-center">Nenhum dado disponível</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Seção 4: Tabela de Criativos com Renda Alta -->
+        <div class="card">
+            <div class="card-header text-center">
+                <h3>Criativos com Maior Número de Leads com Renda Acima de R$2.000</h3>
+            </div>
+            <div class="card-body">
+                <div id="criativos-renda-alta-info" class="text-center mb-3 fw-bold"></div>
+                <div class="table-responsive">
+                    <table id="tabela-criativos-renda-alta" class="table table-striped">
+                        <thead class="table-header-green">
+                            <tr>
+                                <th>UTM Term</th>
+                                <th>Quantidade de Leads</th>
+                                <th>Porcentagem (%)</th>
+                                <th>Score</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td colspan="4" class="text-center">Nenhum dado disponível</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mensagem de carregamento -->
+    <div id="loading-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); z-index: 9999;">
+        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background-color: white; padding: 20px; border-radius: 10px; text-align: center;">
+            <div class="spinner-border text-primary mb-3" role="status">
+                <span class="visually-hidden">Carregando...</span>
+            </div>
+            <h4 id="loading-message">Processando dados...</h4>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/plotly.js-dist@2.18.0/plotly.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/papaparse@5.3.2/papaparse.min.js"></script>
+    <script>
+        // Variáveis globais
+        let leadsData = null;
+        let pesquisaData = null;
+        let dadosCruzados = null;
+        let dadosFiltrados = null;
+
+        // Ordem das faixas de renda
+        const ordemRenda = [
+            'Mais de R$9.000',
+            'De R$5.000 a R$9.000',
+            'De R$2.000 a R$5.000',
+            'De R$1.000 a R$2.000',
+            'Até R$1.000',
+            'Sem renda no momento'
+        ];
+
+        // Faixas de renda acima de 2 mil
+        const faixasRendaAlta = [
+            'Mais de R$9.000',
+            'De R$5.000 a R$9.000',
+            'De R$2.000 a R$5.000'
+        ];
+
+        // Pesos para cálculo de score
+        const pesosRenda = {
+            'Mais de R$9.000': 6,
+            'De R$5.000 a R$9.000': 5,
+            'De R$2.000 a R$5.000': 4,
+            'De R$1.000 a R$2.000': 3,
+            'Até R$1.000': 2,
+            'Sem renda no momento': 1
+        };
+
+        // Funções de utilidade
+        function showLoading(message = "Processando dados...") {
+            document.getElementById('loading-message').textContent = message;
+            document.getElementById('loading-overlay').style.display = 'block';
+        }
+
+        function hideLoading() {
+            document.getElementById('loading-overlay').style.display = 'none';
+        }
+
+        function showStatus(elementId, message, type = 'success') {
+            const statusElement = document.getElementById(elementId);
+            statusElement.innerHTML = `<div class="alert alert-${type} mt-2">${message}</div>`;
+        }
+
+        // Função para processar o upload de arquivos
+        function handleFileUpload(file, type) {
+            return new Promise((resolve, reject) => {
+                if (!file) {
+                    reject("Nenhum arquivo selecionado");
+                    return;
+                }
+
+                const reader = new FileReader();
+                
+                reader.onload = function(e) {
+                    const content = e.target.result;
+                    
+                    // Verificar o tipo de arquivo
+                    if (file.name.endsWith('.csv')) {
+                        Papa.parse(content, {
+                            header: true,
+                            skipEmptyLines: true,
+                            complete: function(results) {
+                                if (results.errors.length > 0) {
+                                    reject(`Erro ao processar o arquivo CSV: ${results.errors[0].message}`);
+                                    return;
+                                }
+                                
+                                // Verificar se o arquivo contém os dados esperados
+                                if (type === 'leads') {
+                                    // Verificar se há colunas UTM
+                                    const utmCols = Object.keys(results.data[0]).filter(col => col.toLowerCase().includes('utm_'));
+                                    if (utmCols.length === 0) {
+                                        reject("O arquivo não parece conter dados de leads com informações de UTM");
+                                        return;
+                                    }
+                                    
+                                    // Verificar se há coluna de email
+                                    const emailCols = Object.keys(results.data[0]).filter(col => col.toLowerCase().includes('email'));
+                                    if (emailCols.length === 0) {
+                                        reject("O arquivo não contém uma coluna de email identificável");
+                                        return;
+                                    }
+                                    
+                                    leadsData = results.data;
+                                    showStatus('leads-status', `Arquivo de leads carregado: ${file.name}<br>Número de registros: ${results.data.length}`, 'success');
+                                } else if (type === 'pesquisa') {
+                                    // Verificar se há coluna de renda
+                                    const rendaCols = Object.keys(results.data[0]).filter(col => col.toLowerCase().includes('renda'));
+                                    if (rendaCols.length === 0) {
+                                        reject("O arquivo não parece conter dados de pesquisa com informações de renda");
+                                        return;
+                                    }
+                                    
+                                    // Verificar se há coluna de email
+                                    const emailCols = Object.keys(results.data[0]).filter(col => col.toLowerCase().includes('email'));
+                                    if (emailCols.length === 0) {
+                                        reject("O arquivo não contém uma coluna de email identificável");
+                                        return;
+                                    }
+                                    
+                                    pesquisaData = results.data;
+                                    showStatus('pesquisa-status', `Arquivo de pesquisa carregado: ${file.name}<br>Número de registros: ${results.data.length}`, 'success');
+                                }
+                                
+                                resolve(results.data);
+                            }
+                        });
+                    } else if (file.name.endsWith('.xlsx') || file.name.endsWith('.xls')) {
+                        reject("Arquivos Excel não são suportados nesta versão estática. Por favor, converta para CSV.");
+                    } else {
+                        reject(`Formato de arquivo não suportado: ${file.name}`);
+                    }
+                };
+                
+                reader.onerror = function() {
+                    reject("Erro ao ler o arquivo");
+                };
+                
+                reader.readAsText(file);
+            });
+        }
+
+        // Função para cruzar os dados
+        function cruzarDados() {
+            return new Promise((resolve, reject) => {
+                if (!leadsData || !pesquisaData) {
+                    reject("Ambos os arquivos de leads e pesquisa são necessários para o cruzamento");
+                    return;
+                }
+                
+                try {
+                    // Identificar a coluna de email em cada arquivo
+                    const leadsEmailCol = Object.keys(leadsData[0]).find(col => col.toLowerCase().includes('email'));
+                    const pesquisaEmailCol = Object.keys(pesquisaData[0]).find(col => col.toLowerCase().includes('email'));
+                    
+                    if (!leadsEmailCol || !pesquisaEmailCol) {
+                        reject("Não foi possível identificar as colunas de email nos arquivos");
+                        return;
+                    }
+                    
+                    // Normalizar os emails
+                    leadsData.forEach(row => {
+                        row.Email_Normalizado = (row[leadsEmailCol] || '').toString().toLowerCase().trim();
+                    });
+                    
+                    pesquisaData.forEach(row => {
+                        row.Email_Normalizado = (row[pesquisaEmailCol] || '').toString().toLowerCase().trim();
+                    });
+                    
+                    // Cruzar os dados
+                    const mergedData = [];
+                    
+                    for (const leadRow of leadsData) {
+                        const matchingPesquisaRows = pesquisaData.filter(pesquisaRow => 
+                            pesquisaRow.Email_Normalizado === leadRow.Email_Normalizado
+                        );
+                        
+                        for (const pesquisaRow of matchingPesquisaRows) {
+                            const mergedRow = { ...leadRow, ...pesquisaRow };
+                            mergedData.push(mergedRow);
+                        }
+                    }
+                    
+                    // Corrigir o problema de tipos mistos nas colunas UTM
+                    mergedData.forEach(row => {
+                        Object.keys(row).forEach(col => {
+                            if (col.toLowerCase().includes('utm_')) {
+                                row[col] = row[col] || 'Não informado';
+                            }
+                        });
+                    });
+                    
+                    dadosCruzados = mergedData;
+                    dadosFiltrados = mergedData;
+                    
+                    resolve(mergedData);
+                } catch (error) {
+                    reject(`Erro ao cruzar os dados: ${error.message}`);
+                }
+            });
+        }
+
+        // Função para calcular os criativos com maior número de leads com renda acima de 2 mil
+        function calcularCriativosRendaAlta(dados) {
+            if (!dados || dados.length === 0) {
+                return [];
+            }
+            
+            try {
+                // Identificar as colunas necessárias
+                const utmTermCol = Object.keys(dados[0]).find(col => col.toLowerCase() === 'utm_term');
+                const rendaCol = Object.keys(dados[0]).find(col => col.toLowerCase().includes('renda'));
+                
+                if (!utmTermCol || !rendaCol) {
+                    console.error("Colunas necessárias não encontradas");
+                    return [];
+                }
+                
+                // Filtrar leads com renda acima de 2 mil
+                const dadosRendaAlta = dados.filter(row => faixasRendaAlta.includes(row[rendaCol]));
+                
+                if (dadosRendaAlta.length === 0) {
+                    return [];
+                }
+                
+                // Contar a quantidade de leads por utm_term
+                const utmCounts = {};
+                dadosRendaAlta.forEach(row => {
+                    const utmTerm = row[utmTermCol] || 'Não informado';
+                    utmCounts[utmTerm] = (utmCounts[utmTerm] || 0) + 1;
+                });
+                
+                // Calcular a distribuição de faixas de renda para cada utm_term
+                const utmRendaDist = {};
+                const utmTotal = {};
+                
+                dados.forEach(row => {
+                    const utmTerm = row[utmTermCol] || 'Não informado';
+                    const renda = row[rendaCol];
+                    
+                    if (!utmRendaDist[utmTerm]) {
+                        utmRendaDist[utmTerm] = {};
+                        ordemRenda.forEach(r => {
+                            utmRendaDist[utmTerm][r] = 0;
+                        });
+                        utmTotal[utmTerm] = 0;
+                    }
+                    
+                    if (ordemRenda.includes(renda)) {
+                        utmRendaDist[utmTerm][renda]++;
+                        utmTotal[utmTerm]++;
+                    }
+                });
+                
+                // Calcular percentuais e scores
+                const result = [];
+                const totalLeadsRendaAlta = dadosRendaAlta.length;
+                
+                for (const utmTerm in utmCounts) {
+                    const quantidade = utmCounts[utmTerm];
+                    const porcentagem = (quantidade / totalLeadsRendaAlta * 100).toFixed(2);
+                    
+                    // Calcular score
+                    let score = 0;
+                    const total = utmTotal[utmTerm];
+                    
+                    if (total > 0 && utmRendaDist[utmTerm]) {
+                        for (const renda in pesosRenda) {
+                            if (utmRendaDist[utmTerm][renda]) {
+                                const percentual = utmRendaDist[utmTerm][renda] / total;
+                                score += percentual * pesosRenda[renda];
+                            }
+                        }
+                    }
+                    
+                    result.push({
+                        'UTM Term': utmTerm,
+                        'Quantidade de Leads': quantidade,
+                        'Porcentagem (%)': porcentagem + '%',
+                        'Score': score.toFixed(2)
+                    });
+                }
+                
+                // Ordenar por quantidade de leads (decrescente)
+                result.sort((a, b) => b['Quantidade de Leads'] - a['Quantidade de Leads']);
+                
+                return result;
+            } catch (error) {
+                console.error("Erro ao calcular criativos com renda alta:", error);
+                return [];
+            }
+        }
+
+        // Função para atualizar a interface após o cruzamento de dados
+        function atualizarInterface(dados) {
+            if (!dados || dados.length === 0) {
+                return;
+            }
+            
+            // Identificar as colunas
+            const utmTermCol = Object.keys(dados[0]).find(col => col.toLowerCase() === 'utm_term');
+            const rendaCol = Object.keys(dados[0]).find(col => col.toLowerCase().includes('renda'));
+            const utmSourceCol = Object.keys(dados[0]).find(col => col.toLowerCase() === 'utm_source');
+            const utmMediumCol = Object.keys(dados[0]).find(col => col.toLowerCase() === 'utm_medium');
+            const utmCampaignCol = Object.keys(dados[0]).find(col => col.toLowerCase() === 'utm_campaign');
+            const emailCol = Object.keys(dados[0]).find(col => col.toLowerCase().includes('email') && !col.includes('Normalizado'));
+            const generoCol = Object.keys(dados[0]).find(col => col.toLowerCase().includes('gênero') || col.toLowerCase().includes('genero'));
+            const idadeCol = Object.keys(dados[0]).find(col => col.toLowerCase().includes('idade'));
+            const estadoCol = Object.keys(dados[0]).find(col => col.toLowerCase().includes('estado'));
+            const atividadeCol = Object.keys(dados[0]).find(col => col.toLowerCase().includes('atividade'));
+            
+            // Atualizar os dropdowns
+            if (utmTermCol) {
+                const utmTerms = [...new Set(dados.map(row => row[utmTermCol] || 'Não informado'))].filter(term => term !== 'Não informado').sort();
+                const utmTermSelect = document.getElementById('utm-term-select');
+                utmTermSelect.innerHTML = '';
+                utmTerms.forEach(term => {
+                    const option = document.createElement('option');
+                    option.value = term;
+                    option.textContent = term;
+                    utmTermSelect.appendChild(option);
+                });
+            }
+            
+            if (rendaCol) {
+                const rendaSelect = document.getElementById('renda-select');
+                rendaSelect.innerHTML = '';
+                ordemRenda.forEach(renda => {
+                    if (dados.some(row => row[rendaCol] === renda)) {
+                        const option = document.createElement('option');
+                        option.value = renda;
+                        option.textContent = renda;
+                        rendaSelect.appendChild(option);
+                    }
+                });
+            }
+            
+            if (utmSourceCol) {
+                const utmSources = [...new Set(dados.map(row => row[utmSourceCol] || 'Não informado'))].filter(source => source !== 'Não informado').sort();
+                const utmSourceSelect = document.getElementById('utm-source-select');
+                utmSourceSelect.innerHTML = '';
+                utmSources.forEach(source => {
+                    const option = document.createElement('option');
+                    option.value = source;
+                    option.textContent = source;
+                    utmSourceSelect.appendChild(option);
+                });
+            }
+            
+            if (utmMediumCol) {
+                const utmMediums = [...new Set(dados.map(row => row[utmMediumCol] || 'Não informado'))].filter(medium => medium !== 'Não informado').sort();
+                const utmMediumSelect = document.getElementById('utm-medium-select');
+                utmMediumSelect.innerHTML = '';
+                utmMediums.forEach(medium => {
+                    const option = document.createElement('option');
+                    option.value = medium;
+                    option.textContent = medium;
+                    utmMediumSelect.appendChild(option);
+                });
+            }
+            
+            if (utmCampaignCol) {
+                const utmCampaigns = [...new Set(dados.map(row => row[utmCampaignCol] || 'Não informado'))].filter(campaign => campaign !== 'Não informado').sort();
+                const utmCampaignSelect = document.getElementById('utm-campaign-select');
+                utmCampaignSelect.innerHTML = '';
+                utmCampaigns.forEach(campaign => {
+                    const option = document.createElement('option');
+                    option.value = campaign;
+                    option.textContent = campaign;
+                    utmCampaignSelect.appendChild(option);
+                });
+            }
+            
+            // Atualizar a tabela de resultados
+            const resultsTable = document.getElementById('results-table');
+            const tbody = resultsTable.querySelector('tbody');
+            tbody.innerHTML = '';
+            
+            dados.slice(0, 100).forEach(row => {
+                const tr = document.createElement('tr');
+                
+                tr.innerHTML = `
+                    <td>${row[utmTermCol] || ''}</td>
+                    <td>${row[emailCol] || ''}</td>
+                    <td>${row[rendaCol] || ''}</td>
+                    <td>${row[utmSourceCol] || ''}</td>
+                    <td>${row[utmMediumCol] || ''}</td>
+                    <td>${row[utmCampaignCol] || ''}</td>
+                    <td>${row[generoCol] || ''}</td>
+                    <td>${row[idadeCol] || ''}</td>
+                    <td>${row[estadoCol] || ''}</td>
+                    <td>${row[atividadeCol] || ''}</td>
+                `;
+                
+                tbody.appendChild(tr);
+            });
+            
+            document.getElementById('results-count').textContent = `Exibindo ${Math.min(100, dados.length)} de ${dados.length} registros`;
+            
+            // Atualizar a tabela de criativos com renda alta
+            const criativosRendaAlta = calcularCriativosRendaAlta(dados);
+            const tabelaCriativosRendaAlta = document.getElementById('tabela-criativos-renda-alta');
+            const tbodyCriativos = tabelaCriativosRendaAlta.querySelector('tbody');
+            tbodyCriativos.innerHTML = '';
+            
+            if (criativosRendaAlta.length > 0) {
+                criativosRendaAlta.forEach(row => {
+                    const tr = document.createElement('tr');
+                    
+                    tr.innerHTML = `
+                        <td>${row['UTM Term']}</td>
+                        <td>${row['Quantidade de Leads']}</td>
+                        <td>${row['Porcentagem (%)']}</td>
+                        <td class="${parseFloat(row['Score']) >= 5 ? 'high-score' : ''}">${row['Score']}</td>
+                    `;
+                    
+                    tbodyCriativos.appendChild(tr);
+                });
+                
+                // Informações sobre os criativos com renda alta
+                const totalLeadsRendaAlta = criativosRendaAlta.reduce((sum, row) => sum + row['Quantidade de Leads'], 0);
+                document.getElementById('criativos-renda-alta-info').innerHTML = `
+                    <p>Total de leads com renda acima de R$2.000: ${totalLeadsRendaAlta}</p>
+                    <p>Número de criativos diferentes: ${criativosRendaAlta.length}</p>
+                `;
+            } else {
+                tbodyCriativos.innerHTML = '<tr><td colspan="4" class="text-center">Nenhum dado disponível</td></tr>';
+                document.getElementById('criativos-renda-alta-info').innerHTML = '<p>Nenhum dado disponível sobre leads com renda acima de R$2.000.</p>';
+            }
+            
+            // Atualizar os gráficos
+            atualizarGraficos(dados);
+        }
+
+        // Função para atualizar os gráficos
+        function atualizarGraficos(dados) {
+            if (!dados || dados.length === 0) {
+                return;
+            }
+            
+            // Identificar as colunas
+            const utmTermCol = Object.keys(dados[0]).find(col => col.toLowerCase() === 'utm_term');
+            const rendaCol = Object.keys(dados[0]).find(col => col.toLowerCase().includes('renda'));
+            
+            if (!utmTermCol || !rendaCol) {
+                return;
+            }
+            
+            // Heatmap
+            try {
+                // Criar tabela dinâmica para o heatmap
+                const crosstab = {};
+                const utmTerms = [...new Set(dados.map(row => row[utmTermCol] || 'Não informado'))];
+                
+                // Inicializar a tabela cruzada
+                utmTerms.forEach(term => {
+                    crosstab[term] = {};
+                    ordemRenda.forEach(renda => {
+                        crosstab[term][renda] = 0;
+                    });
+                });
+                
+                // Preencher a tabela cruzada
+                dados.forEach(row => {
+                    const term = row[utmTermCol] || 'Não informado';
+                    const renda = row[rendaCol];
+                    
+                    if (ordemRenda.includes(renda)) {
+                        crosstab[term][renda]++;
+                    }
+                });
+                
+                // Calcular percentuais
+                utmTerms.forEach(term => {
+                    const total = ordemRenda.reduce((sum, renda) => sum + crosstab[term][renda], 0);
+                    if (total > 0) {
+                        ordemRenda.forEach(renda => {
+                            crosstab[term][renda] = (crosstab[term][renda] / total * 100).toFixed(1);
+                        });
+                    }
+                });
+                
+                // Calcular scores para ordenação
+                const scores = {};
+                utmTerms.forEach(term => {
+                    scores[term] = 0;
+                    ordemRenda.forEach(renda => {
+                        if (pesosRenda[renda]) {
+                            scores[term] += parseFloat(crosstab[term][renda]) * pesosRenda[renda] / 100;
+                        }
+                    });
+                });
+                
+                // Ordenar por score e limitar a 15
+                const topTerms = utmTerms
+                    .sort((a, b) => scores[b] - scores[a])
+                    .slice(0, 15);
+                
+                // Preparar dados para o heatmap
+                const z = [];
+                topTerms.forEach(term => {
+                    const row = [];
+                    ordemRenda.forEach(renda => {
+                        row.push(parseFloat(crosstab[term][renda]));
+                    });
+                    z.push(row);
+                });
+                
+                // Criar o heatmap
+                const heatmapData = [{
+                    z: z,
+                    x: ordemRenda,
+                    y: topTerms,
+                    type: 'heatmap',
+                    colorscale: 'YlGnBu',
+                    showscale: true,
+                    text: z.map(row => row.map(val => val.toFixed(1) + '%')),
+                    texttemplate: '%{text}',
+                    textfont: {size: 10}
+                }];
+                
+                const heatmapLayout = {
+                    title: 'Distribuição de Faixas de Renda (%) por UTM Term',
+                    height: 600,
+                    margin: {l: 150, r: 50, t: 80, b: 100},
+                    font: {family: 'Arial', size: 12, color: '#2c3e50'},
+                    plot_bgcolor: '#ffffff',
+                    paper_bgcolor: '#ffffff'
+                };
+                
+                Plotly.newPlot('heatmap-container', heatmapData, heatmapLayout);
+            } catch (error) {
+                console.error("Erro ao gerar o heatmap:", error);
+                document.getElementById('heatmap-container').innerHTML = `
+                    <div class="text-center py-5">
+                        <h4 class="text-danger">Erro ao gerar o heatmap: ${error.message}</h4>
+                    </div>
+                `;
+            }
+            
+            // Gráfico de barras
+            try {
+                // Contar a quantidade de leads por utm_term
+                const utmCounts = {};
+                dados.forEach(row => {
+                    const term = row[utmTermCol] || 'Não informado';
+                    utmCounts[term] = (utmCounts[term] || 0) + 1;
+                });
+                
+                // Converter para array e ordenar
+                const utmCountsArray = Object.entries(utmCounts)
+                    .map(([term, count]) => ({term, count}))
+                    .sort((a, b) => b.count - a.count)
+                    .slice(0, 15);
+                
+                // Criar o gráfico de barras
+                const barData = [{
+                    x: utmCountsArray.map(item => item.term),
+                    y: utmCountsArray.map(item => item.count),
+                    type: 'bar',
+                    marker: {
+                        color: utmCountsArray.map(item => item.count),
+                        colorscale: 'Viridis'
+                    }
+                }];
+                
+                const barLayout = {
+                    title: 'Quantidade de Leads por UTM Term',
+                    xaxis: {
+                        title: 'UTM Term',
+                        tickangle: 45
+                    },
+                    yaxis: {
+                        title: 'Quantidade de Leads'
+                    },
+                    height: 600,
+                    margin: {l: 50, r: 50, t: 80, b: 100},
+                    font: {family: 'Arial', size: 12, color: '#2c3e50'},
+                    plot_bgcolor: '#ffffff',
+                    paper_bgcolor: '#ffffff'
+                };
+                
+                Plotly.newPlot('bar-container', barData, barLayout);
+            } catch (error) {
+                console.error("Erro ao gerar o gráfico de barras:", error);
+                document.getElementById('bar-container').innerHTML = `
+                    <div class="text-center py-5">
+                        <h4 class="text-danger">Erro ao gerar o gráfico de barras: ${error.message}</h4>
+                    </div>
+                `;
+            }
+            
+            // Gráfico de pizza
+            try {
+                // Contar a quantidade de leads por faixa de renda
+                const rendaCounts = {};
+                ordemRenda.forEach(renda => {
+                    rendaCounts[renda] = 0;
+                });
+                
+                dados.forEach(row => {
+                    const renda = row[rendaCol];
+                    if (ordemRenda.includes(renda)) {
+                        rendaCounts[renda]++;
+                    }
+                });
+                
+                // Converter para array
+                const rendaCountsArray = ordemRenda
+                    .filter(renda => rendaCounts[renda] > 0)
+                    .map(renda => ({renda, count: rendaCounts[renda]}));
+                
+                // Criar o gráfico de pizza
+                const pieData = [{
+                    labels: rendaCountsArray.map(item => item.renda),
+                    values: rendaCountsArray.map(item => item.count),
+                    type: 'pie',
+                    textinfo: 'percent+label',
+                    textposition: 'inside',
+                    marker: {
+                        colors: ['#440154', '#3b528b', '#21918c', '#5ec962', '#fde725', '#fde725'].slice(0, rendaCountsArray.length)
+                    }
+                }];
+                
+                const pieLayout = {
+                    title: 'Distribuição de Leads por Faixa de Renda',
+                    height: 600,
+                    font: {family: 'Arial', size: 12, color: '#2c3e50'},
+                    plot_bgcolor: '#ffffff',
+                    paper_bgcolor: '#ffffff'
+                };
+                
+                Plotly.newPlot('pie-container', pieData, pieLayout);
+            } catch (error) {
+                console.error("Erro ao gerar o gráfico de pizza:", error);
+                document.getElementById('pie-container').innerHTML = `
+                    <div class="text-center py-5">
+                        <h4 class="text-danger">Erro ao gerar o gráfico de pizza: ${error.message}</h4>
+                    </div>
+                `;
+            }
+        }
+
+        // Função para filtrar os dados
+        function filtrarDados() {
+            if (!dadosCruzados || dadosCruzados.length === 0) {
+                return;
+            }
+            
+            const utmTerms = Array.from(document.getElementById('utm-term-select').selectedOptions).map(option => option.value);
+            const rendas = Array.from(document.getElementById('renda-select').selectedOptions).map(option => option.value);
+            const utmSources = Array.from(document.getElementById('utm-source-select').selectedOptions).map(option => option.value);
+            const utmMediums = Array.from(document.getElementById('utm-medium-select').selectedOptions).map(option => option.value);
+            const utmCampaigns = Array.from(document.getElementById('utm-campaign-select').selectedOptions).map(option => option.value);
+            const email = document.getElementById('email-search').value.toLowerCase();
+            
+            // Identificar as colunas
+            const utmTermCol = Object.keys(dadosCruzados[0]).find(col => col.toLowerCase() === 'utm_term');
+            const rendaCol = Object.keys(dadosCruzados[0]).find(col => col.toLowerCase().includes('renda'));
+            const utmSourceCol = Object.keys(dadosCruzados[0]).find(col => col.toLowerCase() === 'utm_source');
+            const utmMediumCol = Object.keys(dadosCruzados[0]).find(col => col.toLowerCase() === 'utm_medium');
+            const utmCampaignCol = Object.keys(dadosCruzados[0]).find(col => col.toLowerCase() === 'utm_campaign');
+            const emailCol = Object.keys(dadosCruzados[0]).find(col => col.toLowerCase().includes('email') && !col.includes('Normalizado'));
+            
+            // Aplicar filtros
+            let filteredData = [...dadosCruzados];
+            
+            if (utmTerms.length > 0) {
+                filteredData = filteredData.filter(row => utmTerms.includes(row[utmTermCol]));
+            }
+            
+            if (rendas.length > 0) {
+                filteredData = filteredData.filter(row => rendas.includes(row[rendaCol]));
+            }
+            
+            if (utmSources.length > 0) {
+                filteredData = filteredData.filter(row => utmSources.includes(row[utmSourceCol]));
+            }
+            
+            if (utmMediums.length > 0) {
+                filteredData = filteredData.filter(row => utmMediums.includes(row[utmMediumCol]));
+            }
+            
+            if (utmCampaigns.length > 0) {
+                filteredData = filteredData.filter(row => utmCampaigns.includes(row[utmCampaignCol]));
+            }
+            
+            if (email) {
+                filteredData = filteredData.filter(row => row[emailCol] && row[emailCol].toLowerCase().includes(email));
+            }
+            
+            dadosFiltrados = filteredData;
+            atualizarInterface(filteredData);
+        }
+
+        // Função para limpar os filtros
+        function limparFiltros() {
+            document.getElementById('utm-term-select').selectedIndex = -1;
+            document.getElementById('renda-select').selectedIndex = -1;
+            document.getElementById('utm-source-select').selectedIndex = -1;
+            document.getElementById('utm-medium-select').selectedIndex = -1;
+            document.getElementById('utm-campaign-select').selectedIndex = -1;
+            document.getElementById('email-search').value = '';
+            
+            dadosFiltrados = dadosCruzados;
+            atualizarInterface(dadosCruzados);
+        }
+
+        // Função para download dos dados filtrados
+        function downloadCSV() {
+            if (!dadosFiltrados || dadosFiltrados.length === 0) {
+                alert("Não há dados para download");
+                return;
+            }
+            
+            // Converter dados para CSV
+            const headers = Object.keys(dadosFiltrados[0]);
+            let csvContent = headers.join(',') + '\n';
+            
+            dadosFiltrados.forEach(row => {
+                const values = headers.map(header => {
+                    const value = row[header] || '';
+                    // Escapar aspas e adicionar aspas se o valor contiver vírgula
+                    return value.toString().includes(',') ? 
+                        `"${value.toString().replace(/"/g, '""')}"` : 
+                        value;
+                });
+                csvContent += values.join(',') + '\n';
+            });
+            
+            // Criar blob e link para download
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.setAttribute('href', url);
+            link.setAttribute('download', 'dados_cruzados_filtrados.csv');
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // Event listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            // Upload de leads
+            const uploadLeadsArea = document.getElementById('upload-leads');
+            const leadsFileInput = document.getElementById('leads-file');
+            
+            uploadLeadsArea.addEventListener('click', function() {
+                leadsFileInput.click();
+            });
+            
+            uploadLeadsArea.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                this.style.backgroundColor = '#e9ecef';
+            });
+            
+            uploadLeadsArea.addEventListener('dragleave', function() {
+                this.style.backgroundColor = '#f8f9fa';
+            });
+            
+            uploadLeadsArea.addEventListener('drop', function(e) {
+                e.preventDefault();
+                this.style.backgroundColor = '#f8f9fa';
+                
+                if (e.dataTransfer.files.length) {
+                    handleFileUpload(e.dataTransfer.files[0], 'leads')
+                        .catch(error => {
+                            showStatus('leads-status', error, 'danger');
+                        });
+                }
+            });
+            
+            leadsFileInput.addEventListener('change', function() {
+                if (this.files.length) {
+                    handleFileUpload(this.files[0], 'leads')
+                        .catch(error => {
+                            showStatus('leads-status', error, 'danger');
+                        });
+                }
+            });
+            
+            // Upload de pesquisa
+            const uploadPesquisaArea = document.getElementById('upload-pesquisa');
+            const pesquisaFileInput = document.getElementById('pesquisa-file');
+            
+            uploadPesquisaArea.addEventListener('click', function() {
+                pesquisaFileInput.click();
+            });
+            
+            uploadPesquisaArea.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                this.style.backgroundColor = '#e9ecef';
+            });
+            
+            uploadPesquisaArea.addEventListener('dragleave', function() {
+                this.style.backgroundColor = '#f8f9fa';
+            });
+            
+            uploadPesquisaArea.addEventListener('drop', function(e) {
+                e.preventDefault();
+                this.style.backgroundColor = '#f8f9fa';
+                
+                if (e.dataTransfer.files.length) {
+                    handleFileUpload(e.dataTransfer.files[0], 'pesquisa')
+                        .catch(error => {
+                            showStatus('pesquisa-status', error, 'danger');
+                        });
+                }
+            });
+            
+            pesquisaFileInput.addEventListener('change', function() {
+                if (this.files.length) {
+                    handleFileUpload(this.files[0], 'pesquisa')
+                        .catch(error => {
+                            showStatus('pesquisa-status', error, 'danger');
+                        });
+                }
+            });
+            
+            // Cruzar dados
+            document.getElementById('cruzar-btn').addEventListener('click', function() {
+                showLoading("Cruzando dados...");
+                
+                setTimeout(() => {
+                    cruzarDados()
+                        .then(dados => {
+                            showStatus('cruzamento-status', `
+                                <div class="alert alert-success">
+                                    <p><strong>Cruzamento concluído com sucesso!</strong></p>
+                                    <p>Número de registros cruzados: ${dados.length}</p>
+                                </div>
+                            `);
+                            atualizarInterface(dados);
+                        })
+                        .catch(error => {
+                            showStatus('cruzamento-status', error, 'danger');
+                        })
+                        .finally(() => {
+                            hideLoading();
+                        });
+                }, 500);
+            });
+            
+            // Filtros
+            document.getElementById('apply-filters').addEventListener('click', function() {
+                showLoading("Aplicando filtros...");
+                
+                setTimeout(() => {
+                    filtrarDados();
+                    hideLoading();
+                }, 500);
+            });
+            
+            document.getElementById('clear-filters').addEventListener('click', function() {
+                limparFiltros();
+            });
+            
+            // Download
+            document.getElementById('download-btn').addEventListener('click', function() {
+                downloadCSV();
+            });
+        });
+    </script>
+</body>
+</html>
